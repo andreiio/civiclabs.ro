@@ -65,7 +65,7 @@ jobs:
 
     - name: Deploy
       run: php artisan deploy production
-      env:
+      with:
         DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
         DEPLOY_PRODUCTION_HOSTNAME: ${{ secrets.DEPLOY_PRODUCTION_HOSTNAME }}
         DEPLOY_PRODUCTION_PATH: ${{ secrets.DEPLOY_PRODUCTION_PATH }}
