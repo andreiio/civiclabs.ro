@@ -1,0 +1,60 @@
+on:
+  branch:
+    - master
+
+name: Deploy
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Setup environment
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 7.3
+        extensions: mbstring, sqlite, pdo_sqlite
+        tools: composer, phpcs
+        coverage: none
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    # Setup caching
+    - name: Cache composer dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.composer/cache/files
+        key: dependencies-composer-${{ hashFiles('composer.lock') }}
+    - name: Cache npm dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: dependencies-npm-${{ hashFiles('package-lock.json') }}
+
+    # Install dependencies
+    - name: composer update
+      run: composer update --prefer-stable --prefer-dist --no-interaction --no-suggest --no-progress --no-scripts
+    - name: twill-install
+      run: npm run twill-install
+    - name: npm install
+      run: npm install --no-save
+
+    # Coding standard
+    - name: phpcs
+      run: phpcs --standard=phpcs.xml
+
+    # Build
+    - name: twill-build
+      run: npm run twill-build
+    - name: build frontend
+      run: npm run production
+
+    # Deploy
+    - name: Setup deploy key
+      uses: webfactory/ssh-agent@v0.2.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+    - name: Deploy
+      run: php artisan deploy production
