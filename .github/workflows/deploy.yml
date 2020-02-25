@@ -57,5 +57,11 @@ jobs:
       uses: webfactory/ssh-agent@v0.2.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+
+    - name: Prepare .env file
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+
     - name: Deploy
       run: php artisan deploy production
